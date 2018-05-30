@@ -8,6 +8,8 @@ from logging import getLogger
 from ykdl.compact import Request, urlopen
 from ykdl.util import log
 from .html import fake_headers
+import subprocess
+from ykdl.compact import compact_tempfile
 
 logger = getLogger("downloader")
 
@@ -76,7 +78,9 @@ def save_url(url, name, ext, status, part = None, reporthook = simple_hook):
     else:
         status[part] =1
 
-def save_urls(urls, name, ext, jobs=1):
+def save_urls(urls, name, ext, jobs=1, use_aria=True):
+    if use_aria and not 'acgvideo.com' in urls[0]:
+        return aria_save_urls(urls, name, ext)
     status = [0] * len(urls)
     if len(urls) == 1:
         save_url(urls[0], name, ext, status)
@@ -97,3 +101,20 @@ def save_urls(urls, name, ext, jobs=1):
             logger.error("downloader failed at part {}".format(i))
         i += 1
     return not 0 in status
+
+aria_args = ['aria2c', '-c', '--max-connection-per-server=16', '--split=16', '--min-split-size=5M', '--file-allocation=falloc']
+
+def aria_save_url(url, name, ext):
+    args = aria_args+['-o', name + '.' + ext, url]
+    return subprocess.call(args)==0
+
+def aria_save_urls(urls, name, ext):
+    if len(urls) == 1:
+        return aria_save_url(urls[0], name, ext)
+    inputfile = compact_tempfile(mode='w+t', suffix='.txt', dir='.', encoding='utf-8')
+    for no, u in enumerate(urls):
+        inputfile.write('%s\n'%u)
+        inputfile.write('  out=%s_%d_.%s\n'%(name,no,ext))
+    inputfile.flush()
+    args = aria_args+['-i', inputfile.name]
+    return subprocess.call(args)==0

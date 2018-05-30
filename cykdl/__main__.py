@@ -46,6 +46,7 @@ def arg_parser():
     parser.add_argument('--no-merge', action='store_true', default=False, help="do not merge video slides")
     parser.add_argument('-s', '--start', type=int, default=0, help="start from INDEX to play/download playlist")
     parser.add_argument('-j', '--jobs', type=int, default=cpu_count(), help="number of jobs for multiprocess download")
+    parser.add_argument('-A', '--aria', action='store_true', default=False, help="Download by Aria2.")
     parser.add_argument('--debug', default=False, action='store_true', help="print debug messages from ykdl")
     parser.add_argument('video_urls', type=str, nargs='+', help="video urls")
     global args
@@ -74,7 +75,7 @@ def download(urls, name, ext, live = False):
     if not m3u8_internal:
         launch_ffmpeg_download(urls[0], name + '.' + ext, live)
     else:
-        if save_urls(urls, name, ext, jobs = args.jobs):
+        if save_urls(urls, name, ext, jobs = args.jobs, use_aria=args.aria):
             lenth = len(urls)
             if lenth > 1 and not args.no_merge:
                 launch_ffmpeg(name, ext,lenth)
