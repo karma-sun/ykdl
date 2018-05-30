@@ -6,7 +6,7 @@ from ykdl.util.match import match1, matchall
 from ykdl.util import log
 from ykdl.extractor import VideoExtractor
 from ykdl.videoinfo import VideoInfo
-from ykdl.compact import HTTPSHandler, build_opener, HTTPCookieProcessor, install_opener, urlopen, quote
+from ykdl.compact import urlopen, quote
 from .youkujs import supported_stream_code, ids, stream_code_to_id, stream_code_to_profiles, id_to_container
 
 
@@ -16,7 +16,7 @@ import ssl
 
 
 def fetch_cna():
-    url = 'http://gm.mmstat.com/yt/ykcomment.play.commentInit?cna='
+    url = 'https://gm.mmstat.com/yt/ykcomment.play.commentInit?cna='
     req = urlopen(url)
     cookies = req.info()['Set-Cookie']
     cna = match1(cookies, "cna=([^;]+)")
@@ -33,15 +33,11 @@ class Youku(VideoExtractor):
         self.params = (
             ('0510', self.ref_youku, self.ckey_default),
             ('050F', self.ref_tudou, self.ckey_default),
+            ('0590', self.ref_youku, self.ckey_default),
             )
 
     def prepare(self):
-        ssl_context = HTTPSHandler(
-            context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
-        cookie_handler = HTTPCookieProcessor()
-        opener = build_opener(ssl_context, cookie_handler)
-        opener.addheaders = [('Cookie','__ysuid=%d' % time.time())]
-        install_opener(opener)
+        add_header("Cookie", '__ysuid=%d' % time.time())
 
         info = VideoInfo(self.name)
 
