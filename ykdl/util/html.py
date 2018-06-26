@@ -110,3 +110,8 @@ def url_info(url, faker = False):
     else:
         ext = ""
     return '', ext, 0
+
+from bs4 import BeautifulSoup
+
+def parse_html(html):
+    return BeautifulSoup(html, 'html.parser')
